@@ -5,6 +5,7 @@ const express = require("express");
 const dontenv = require("dotenv");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 dontenv.config();
 
 const uri = process.env.MONGODB_URI;
@@ -28,6 +29,37 @@ const client = new MongoClient(uri, {
   },
 });
 
+const JWKS = createRemoteJWKSet(new URL(`${process.env.CLIENT_URL}/api/auth/jwks`));
+
+const verifyToken = async (req, res, next) => {
+
+  const authHeader = req.headers.authorization;
+  // console.log(authHeader);
+  
+
+  if (!authHeader || !authHeader.startsWith("Bearer")) {
+    return res.status(401).json({ msg: "Unauthorized" });
+  }
+  const token = authHeader.split(" ")[1];
+  // console.log(token);
+  
+
+  if (!token) {
+    return res.status(401).json({ msg: "Unauthorized" });
+  }
+
+  try {
+    const { payload } = await jwtVerify(token, JWKS);
+    console.log(payload);
+
+    next()
+    
+  } catch(error) {
+    console.log(error);
+    return res.status(401).json({ msg: "Unauthorized" });
+  }
+}
+
 async function run() {
   try {
     await client.connect();
@@ -36,7 +68,7 @@ async function run() {
     const recipeCollection = db.collection('recipes');
 
 
-    app.post('/user/recipes', async (req, res) => {
+    app.post('/user/recipes', verifyToken, async (req, res) => {
       const data = req.body;
       const result = await recipeCollection.insertOne(data);
       res.send(result);
