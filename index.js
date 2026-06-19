@@ -50,27 +50,60 @@ const verifyToken = async (req, res, next) => {
 
   try {
     const { payload } = await jwtVerify(token, JWKS);
-    console.log(payload);
+    req.user = payload;
+    // console.log(payload);
 
     next()
     
-  } catch(error) {
-    console.log(error);
+  } catch (error) {
+    // console.log(error);
     return res.status(401).json({ msg: "Unauthorized" });
   }
+};
+
+const userVerify = async (req, res, next) => {
+  const user = req.user;
+  // console.log('user from userverify', user);
+  if (user.role !== "user" || user.plan != "pro") {
+    return res.status(403).json({ msg: "Forbidden" });
+  }
+  next()
+  
 }
+
 
 async function run() {
   try {
     await client.connect();
     const db = client.db("recipehub-db");
+    const subscriptionCollection = db.collection("subscriptions");
     const userCollection = db.collection('user');
     const recipeCollection = db.collection('recipes');
 
 
-    app.post('/user/recipes', verifyToken, async (req, res) => {
+    app.post("/subscription", async (req, res) => {
+      const { sessionId, userId, priceId } = req.body;
+      await subscriptionCollection.insertOne({
+        sessionId,
+        userId,
+        priceId
+      })
+
+      //update user role
+      await userCollection.updateOne(
+        { _id: ObjectId(userId) },
+        { $set: { role: "pro" } }
+      );
+
+      res,json({msg: "Payment Successful !"})
+
+
+    })
+
+
+    app.post('/user/recipes', verifyToken,userVerify, async (req, res) => {
       const data = req.body;
-      const result = await recipeCollection.insertOne(data);
+      const result = await recipeCollection.insertOne({...data, userId:req.user.id});
       res.send(result);
     })
 
