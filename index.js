@@ -83,6 +83,12 @@ async function run() {
 
     app.post("/subscription", async (req, res) => {
       const { sessionId, userId, priceId } = req.body;
+
+      const isExist = await subscriptionCollection.findOne({ sessionId });
+      if (isExist) {
+        return res.json({msg: 'Already exist!'});
+      }
+
       await subscriptionCollection.insertOne({
         sessionId,
         userId,
@@ -91,11 +97,11 @@ async function run() {
 
       //update user role
       await userCollection.updateOne(
-        { _id: ObjectId(userId) },
-        { $set: { role: "pro" } }
+        { _id: new ObjectId (userId) },
+        { $set: { plan: "pro" } }
       );
 
-      res,json({msg: "Payment Successful !"})
+      res.json({msg: "Payment Successful !"})
 
 
     })
