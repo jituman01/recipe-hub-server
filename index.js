@@ -34,6 +34,7 @@ const JWKS = createRemoteJWKSet(new URL(`${process.env.CLIENT_URL}/api/auth/jwks
 const verifyToken = async (req, res, next) => {
 
   const authHeader = req.headers.authorization;
+  console.log("🚨 VerifyToken Error: No Bearer token in headers");
   // console.log(authHeader);
   
 
@@ -63,13 +64,13 @@ const verifyToken = async (req, res, next) => {
 
 const userVerify = async (req, res, next) => {
   const user = req.user;
-  // console.log('user from userverify', user);
-  if (user.role !== "user" || user.plan != "pro") {
+  
+  if (!user || user.role !== "user") {
     return res.status(403).json({ msg: "Forbidden" });
   }
-  next()
   
-}
+  next();
+};
 
 
 async function run() {
@@ -79,6 +80,8 @@ async function run() {
     const subscriptionCollection = db.collection("subscriptions");
     const userCollection = db.collection('user');
     const recipeCollection = db.collection('recipes');
+    const paymentCollection = db.collection('payment');
+
 
 
     app.post("/subscription", async (req, res) => {
@@ -86,7 +89,7 @@ async function run() {
 
       const isExist = await subscriptionCollection.findOne({ sessionId });
       if (isExist) {
-        return res.json({msg: 'Already exist!'});
+        return res.json({ msg: 'Already exist!' });
       }
 
       await subscriptionCollection.insertOne({
@@ -97,21 +100,51 @@ async function run() {
 
       //update user role
       await userCollection.updateOne(
-        { _id: new ObjectId (userId) },
+        { _id: new ObjectId(userId) },
         { $set: { plan: "pro" } }
       );
 
-      res.json({msg: "Payment Successful !"})
+      res.json({ msg: "Payment Successful !" })
 
 
-    })
+    });
 
 
-    app.post('/user/recipes', verifyToken,userVerify, async (req, res) => {
+    app.post('/user/recipes', verifyToken, userVerify, async (req, res) => {
       const data = req.body;
-      const result = await recipeCollection.insertOne({...data, userId:req.user.id});
+      const result = await recipeCollection.insertOne({ ...data, userId: req.user.id });
       res.send(result);
-    })
+    });
+
+
+
+
+  app.get('/user/overview', async (req, res) => {
+  try {
+    const userId = req.query.userId; 
+
+    if (!userId) {
+      return res.status(400).json({ success: false, msg: "User ID is required!" });
+    }
+
+    const query = { userId: userId };
+    const totalRecipes = await recipeCollection.countDocuments(query);
+    
+    // console.log(userId);
+
+    res.status(200).json({
+      success: true,
+      stats: {
+        totalRecipes: totalRecipes,
+        totalFavorites: 0,
+        totalLikesReceived: 0
+      }
+    });
+
+  } catch (error) {
+    res.status(500).json({ success: false, msg: "Internal Server Error" });
+  }
+});
 
 
 
