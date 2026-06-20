@@ -34,7 +34,6 @@ const JWKS = createRemoteJWKSet(new URL(`${process.env.CLIENT_URL}/api/auth/jwks
 const verifyToken = async (req, res, next) => {
 
   const authHeader = req.headers.authorization;
-  console.log("🚨 VerifyToken Error: No Bearer token in headers");
   // console.log(authHeader);
   
 
@@ -81,6 +80,28 @@ async function run() {
     const userCollection = db.collection('user');
     const recipeCollection = db.collection('recipes');
     const paymentCollection = db.collection('payment');
+
+    
+
+app.get('/user/my-recipes', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    if (!userId) {
+      return res.status(400).json({ success: false, msg: "User ID is required!" });
+    }
+
+    const query = { userId: userId };
+    const result = await recipeCollection.find(query).toArray();
+    res.status(200).json(result);
+  } catch (error) {
+    // console.error( error);
+    res.status(500).json({ success: false, msg: "Internal Server Error" });
+  }
+});
+
+
+
+
 
 
 
