@@ -209,6 +209,10 @@ app.get('/user/my-recipes', async (req, res) => {
   }
 });
 
+    app.get("/recipes", async (req, res) => {
+      const result = await recipeCollection.find().toArray();
+      res.send(result);
+  })
 
 
 
