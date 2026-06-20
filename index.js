@@ -99,7 +99,32 @@ app.get('/user/my-recipes', async (req, res) => {
   }
 });
 
+    app.patch('/recipes/:id', async (req, res) => {
+    try {
+    const id = req.params.id;
+    const updatedData = req.body;
+    const filter = { _id: new ObjectId(id) };
+    
+    const updateDoc = {
+      $set: {
+        title: updatedData.title,
+        category: updatedData.category,
+        cookingTime: updatedData.cookingTime,
+        difficulty: updatedData.difficulty
+      }
+    };
 
+    const result = await recipeCollection.updateOne(filter, updateDoc);
+    if (result.modifiedCount > 0) {
+      res.status(200).json({ success: true, msg: "Recipe updated successfully!" });
+    } else {
+      res.status(400).json({ success: false, msg: "No changes made or recipe not found." });
+    }
+  } catch (error) {
+    // console.error( error);
+    res.status(500).json({ success: false, msg: "Internal Server Error" });
+  }
+  });
 
 
 
