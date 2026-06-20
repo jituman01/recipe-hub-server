@@ -127,6 +127,23 @@ app.get('/user/my-recipes', async (req, res) => {
   });
 
 
+    
+    app.delete('/recipes/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    
+    const result = await recipeCollection.deleteOne(query);
+    if (result.deletedCount > 0) {
+      res.status(200).json({ success: true, msg: "Recipe deleted successfully!" });
+    } else {
+      res.status(404).json({ success: false, msg: "Recipe not found." });
+    }
+  } catch (error) {
+    // console.error(error);
+    res.status(500).json({ success: false, msg: "Internal Server Error" });
+  }
+  });
 
 
 
