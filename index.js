@@ -217,15 +217,21 @@ app.get('/user/my-recipes', async (req, res) => {
       if (search && search != "undefined") {
         query.$or = [
           { recipeName: { $regex: search, $options: 'i' } },
-          {category:{$regex: search, $options:'i'}}
+          { category: { $regex: search, $options: 'i' } }
         ]
       };
 
-
-
       const result = await recipeCollection.find(query).toArray();
       res.send(result);
-  })
+    });
+
+
+     app.get('/recipe/:id', async (req, res) => {
+        const { id } = req.params;
+        const result = await recipeCollection.findOne({ _id: new ObjectId(id) });
+
+        res.send(result);
+      })
 
 
 
