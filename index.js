@@ -173,6 +173,36 @@ app.get('/user/my-recipes', async (req, res) => {
     });
 
 
+    app.post("/payment", async (req, res) => {
+    const { userEmail, userId, amount, recipeId, transactionId, paymentStatus, paidAt } = req.body;
+
+    const payment = await paymentCollection.findOne({ transactionId });
+    if (payment) {
+      return res.json({ msg: 'Payment already recorded!' });
+    }
+
+    await paymentCollection.insertOne({
+      userEmail,
+      userId,
+      amount,
+      recipeId,
+      transactionId,
+      paymentStatus,
+      paidAt
+    });
+
+      res.json({ msg: "Payment Successful !" });
+    });
+
+
+
+
+
+
+
+
+
+
     app.post('/user/recipes', verifyToken, userVerify, async (req, res) => {
       const data = req.body;
       const result = await recipeCollection.insertOne({ ...data, userId: req.user.id });
