@@ -197,17 +197,29 @@ app.get('/user/my-recipes', async (req, res) => {
 
 
 
+  app.post('/user/recipes', verifyToken, userVerify, async (req, res) => {
+    const data = req.body;
+    const authUserId = req.user.id;
 
+    const user = await userCollection.findOne({ _id: new ObjectId(authUserId) });
 
+    const recipeCount = await recipeCollection.countDocuments({ userId: authUserId });
 
-
-
-
-    app.post('/user/recipes', verifyToken, userVerify, async (req, res) => {
-      const data = req.body;
-      const result = await recipeCollection.insertOne({ ...data, userId: req.user.id });
-      res.send(result);
+    if (user?.plan !== "pro" && recipeCount >= 2) {
+    return res.status(403).json({ 
+      success: false, 
+      msg: "Free limit exceeded! You can only add up to 2 recipes in the free plan. Please upgrade to Pro." 
     });
+    }
+
+    const result = await recipeCollection.insertOne({ 
+    ...data, 
+    userId: authUserId,
+    createdAt: new Date() 
+    });
+  
+    res.send(result);
+  });
 
 
 
