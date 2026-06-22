@@ -174,7 +174,7 @@ app.get('/user/my-recipes', async (req, res) => {
 
 
     app.post("/payment", async (req, res) => {
-    const { userEmail, userId, amount, recipeId, transactionId, paymentStatus, paidAt } = req.body;
+    const { userEmail, userId,recipeName, image, authorName, amount, recipeId, transactionId, paymentStatus, paidAt } = req.body;
 
     const payment = await paymentCollection.findOne({ transactionId });
     if (payment) {
@@ -186,6 +186,9 @@ app.get('/user/my-recipes', async (req, res) => {
       userId,
       amount,
       recipeId,
+      recipeName,
+      image,
+      authorName,
       transactionId,
       paymentStatus,
       paidAt
@@ -251,6 +254,9 @@ app.get('/user/my-recipes', async (req, res) => {
   }
 });
 
+
+    
+
     app.get("/recipes", async (req, res) => {
       const { search } = req.query;
       // console.log(search);
@@ -268,12 +274,24 @@ app.get('/user/my-recipes', async (req, res) => {
     });
 
 
-     app.get('/recipe/:id', async (req, res) => {
-        const { id } = req.params;
-        const result = await recipeCollection.findOne({ _id: new ObjectId(id) });
+    app.get('/recipe/:id', async (req, res) => {
+      const { id } = req.params;
+      const result = await recipeCollection.findOne({ _id: new ObjectId(id) });
 
-        res.send(result);
-      })
+      res.send(result);
+    });
+
+
+
+    app.get('/user/purchased-recipes', async (req, res) => {
+    const userId = req.query.userId;
+
+    const query = { userId: userId };
+    const result = await paymentCollection.find(query).toArray();
+    
+    res.status(200).json(result);
+});
+
 
 
 
