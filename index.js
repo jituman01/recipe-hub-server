@@ -80,6 +80,7 @@ async function run() {
     const userCollection = db.collection('user');
     const recipeCollection = db.collection('recipes');
     const paymentCollection = db.collection('payment');
+    const favoriteCollection = db.collection("favorites");
 
     
 
@@ -292,6 +293,26 @@ app.get('/user/my-recipes', async (req, res) => {
     res.status(200).json(result);
 });
 
+
+  app.post("/user/favorites", async (req, res) => {
+
+    const { userEmail, userId, recipeId } = req.body;
+
+    const isExist = await favoriteCollection.findOne({ userId, recipeId });
+    if (isExist) {
+      return res.status(400).json({ success: false, msg: "This recipe is already in your favorites!" });
+    }
+
+    const result = await favoriteCollection.insertOne({
+      userEmail,
+      userId,
+      recipeId,
+      addedAt: new Date() 
+    });
+
+    res.status(200).json({ success: true, msg: "Added to favorites successfully!", data: result });
+  
+});
 
 
 
