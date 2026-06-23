@@ -81,6 +81,8 @@ async function run() {
     const recipeCollection = db.collection('recipes');
     const paymentCollection = db.collection('payment');
     const favoriteCollection = db.collection("favorites");
+    const reportCollection = db.collection("reports");
+
 
     
 
@@ -219,6 +221,7 @@ app.get('/user/my-recipes', async (req, res) => {
     const result = await recipeCollection.insertOne({ 
     ...data, 
     userId: authUserId,
+    likesCount: 0,
     createdAt: new Date() 
     });
   
@@ -314,6 +317,62 @@ app.get('/user/my-recipes', async (req, res) => {
   
 });
 
+
+    
+
+    app.patch('/recipes/:id/like', async (req, res) => {
+  
+    const id = req.params.id;
+    const filter = { _id: new ObjectId(id) };
+
+    const updateCount = {
+      $inc: { likesCount: 1 }
+    };
+
+    const result = await recipeCollection.updateOne(filter, updateCount);
+    
+    if (result.modifiedCount > 0) {
+      const updatedRecipe = await recipeCollection.findOne(filter);
+
+      res.status(200).json({ 
+        success: true, 
+        msg: "Recipe liked successfully!", 
+        likesCount: updatedRecipe.likesCount || 0 
+      });
+    } else {
+      res.status(404).json({ success: false, msg: "Recipe not found." });
+    }
+});
+
+
+    
+    
+
+app.post("/user/reports", async (req, res) => {
+
+    const { recipeId, recipeName, reporterEmail, reason, details } = req.body;
+
+    if (!recipeId || !reporterEmail || !reason) {
+      return res.status(400).json({ success: false, msg: "Required fields are missing!" });
+    }
+
+    const result = await reportCollection.insertOne({
+      recipeId,
+      recipeName,
+      reporterEmail,
+      reason,
+      details: details || "",
+      status: "pending",
+      createdAt: new Date(),
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      msg: "Recipe reported successfully!", 
+      data: result 
+    });
+
+});
 
 
 
