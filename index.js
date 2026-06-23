@@ -296,6 +296,21 @@ app.get('/user/my-recipes', async (req, res) => {
     res.status(200).json(result);
 });
 
+    
+    app.get('/user/favorites', async (req, res) => { 
+    const userId = req.query.userId;
+  
+    const userFavorites = await favoriteCollection.find({ userId: userId }).toArray();
+
+    const recipeId = userFavorites.map(fav => new ObjectId(fav.recipeId));
+
+    const favoriteRecipes = await recipeCollection.find({ _id: { $in: recipeId } }).toArray();
+
+    res.json(favoriteRecipes);
+
+});
+
+    
 
   app.post("/user/favorites", async (req, res) => {
 
