@@ -86,7 +86,7 @@ async function run() {
 
     
 
-app.get('/user/my-recipes', async (req, res) => {
+   app.get('/user/my-recipes', async (req, res) => {
   try {
     const userId = req.query.userId;
     if (!userId) {
@@ -203,7 +203,7 @@ app.get('/user/my-recipes', async (req, res) => {
 
 
 
-  app.post('/user/recipes', verifyToken, userVerify, async (req, res) => {
+    app.post('/user/recipes', verifyToken, userVerify, async (req, res) => {
     const data = req.body;
     const authUserId = req.user.id;
 
@@ -231,7 +231,7 @@ app.get('/user/my-recipes', async (req, res) => {
 
 
 
-  app.get('/user/overview', async (req, res) => {
+    app.get('/user/overview', async (req, res) => {
     const userId = req.query.userId; 
 
     if (!userId) {
@@ -256,7 +256,7 @@ app.get('/user/my-recipes', async (req, res) => {
     });
 
   
-});
+  });
 
 
     
@@ -363,7 +363,7 @@ app.get('/user/my-recipes', async (req, res) => {
     
     
 
-app.post("/user/reports", async (req, res) => {
+  app.post("/user/reports", async (req, res) => {
 
     const { recipeId, recipeName, reporterEmail, reason, details } = req.body;
 
@@ -388,6 +388,27 @@ app.post("/user/reports", async (req, res) => {
     });
 
 });
+
+
+  app.patch("/users/:id", async (req, res) => {
+        const { id } = req.params;
+        const { name, photoURL } = req.body;
+        const filter = { _id: new ObjectId(id) };
+
+        const updateProfile = {
+          $set: {
+            name: name,
+            image: photoURL,
+          },
+        };
+
+        const result = await userCollection.updateOne(filter, updateProfile);
+
+        
+          return res.status(200).json({ success: true, message: "Profile updated successfully!" });
+        
+    });
+
 
 
 
