@@ -232,7 +232,6 @@ app.get('/user/my-recipes', async (req, res) => {
 
 
   app.get('/user/overview', async (req, res) => {
-  try {
     const userId = req.query.userId; 
 
     if (!userId) {
@@ -241,21 +240,22 @@ app.get('/user/my-recipes', async (req, res) => {
 
     const query = { userId: userId };
     const totalRecipes = await recipeCollection.countDocuments(query);
+    const totalFavorites = await favoriteCollection.countDocuments(query);
     
     // console.log(userId);
+    const recipes = await recipeCollection.find(query).toArray();
+    const totalLikesReceived = recipes.reduce((sum, recipe) => sum + (recipe.likesCount || 0), 0);
 
     res.status(200).json({
       success: true,
       stats: {
         totalRecipes: totalRecipes,
-        totalFavorites: 0,
-        totalLikesReceived: 0
+        totalFavorites: totalFavorites,
+        totalLikesReceived: totalLikesReceived
       }
     });
 
-  } catch (error) {
-    res.status(500).json({ success: false, msg: "Internal Server Error" });
-  }
+  
 });
 
 
