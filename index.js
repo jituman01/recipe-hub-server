@@ -410,6 +410,28 @@ async function run() {
     });
 
 
+    //-----------------Admin-----------//
+
+    app.get("/admin/overview-stats", async (req, res) => {
+        const totalUsers = await userCollection.countDocuments();
+        const totalRecipes = await recipeCollection.countDocuments(); 
+        const totalPremium = await userCollection.countDocuments({ plan: "pro" }); 
+        const totalReports = await reportCollection.countDocuments(); 
+
+        res.status(200).json({
+          success: true,
+          data: {
+            totalUsers,
+            totalRecipes,
+            totalPremium,
+            totalReports
+          }
+        });
+
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+      
+    });
+
 
 
     await client.db("admin").command({ ping: 1 });
