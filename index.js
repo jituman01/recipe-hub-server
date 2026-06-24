@@ -540,6 +540,62 @@ async function run() {
 });
 
 
+  app.get("/admin/transactions", async (req, res) => {
+
+    const recipePayments = await db.collection("payment").find({}).toArray();
+    const formattedRecipe = recipePayments.map(item => ({
+      _id: item._id,
+      userEmail: item.userEmail,
+      type: "Recipe",
+      amount: item.amount ? parseFloat(item.amount) : 4.99, 
+      status: item.paymentStatus, 
+      transactionId: item.transactionId, 
+      date: item.paidAt
+    }));
+
+   
+    const subscriptions = await db.collection("subscriptions").find({}).toArray();
+    
+    const formattedPremium = await Promise.all(
+      subscriptions.map(async (item) => {
+        let userEmail = "";
+        let fallbackDate = new Date();
+
+        if (item.userId) {
+          try {
+            const userDoc = await db.collection("user").findOne({ _id: new ObjectId(item.userId) });
+            if (userDoc) {
+              userEmail = userDoc.email; 
+              fallbackDate = userDoc.createdAt;
+            }
+          } catch (err) {
+            const user = await db.collection("user").findOne({ _id: item.userId });
+            if (user) {
+              userEmail = user.email;
+              fallbackDate = user.createdAt;
+            }
+          }
+        }
+
+        return {
+          _id: item._id,
+          userEmail: userEmail,
+          type: "Premium",
+          amount: 9.99, 
+          status: "paid",
+          transactionId: item.sessionId,
+          date: fallbackDate
+        };
+      })
+    );
+
+   
+    const allTransactions = [...formattedPremium, ...formattedRecipe];
+    allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    res.status(200).json({ success: true, data: allTransactions });
+
+  });
+
 
     await client.db("admin").command({ ping: 1 });
     console.log(
