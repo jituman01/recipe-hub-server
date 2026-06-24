@@ -433,6 +433,113 @@ async function run() {
     });
 
 
+    app.get("/admin/users", async (req, res) => {
+       const users = await userCollection.find({}, { projection: { name: 1, email: 1, image: 1, isBlocked: 1, status: 1 } }).toArray();
+        res.status(200).json({ success: true, data: users });
+
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+ 
+    });
+
+    app.patch("/admin/users/:id/toggle-status", async (req, res) => {
+        const { id } = req.params;
+        const { isBlocked } = req.body;
+
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            isBlocked: isBlocked,
+            status: isBlocked ? "Blocked" : "Active"
+          }
+        };
+
+        const result = await userCollection.updateOne(filter, updateDoc);
+
+        if (result.modifiedCount > 0) {
+          res.status(200).json({ success: true, message: `User ${isBlocked ? 'blocked' : 'unblocked'} successfully!` });
+        } else {
+          res.status(400).json({ success: false, message: "No changes made." });
+        }
+
+        res.status(500).json({ success: false, message: "Internal Server Error" });
+ 
+    });
+
+
+
+
+
+    app.get("/admin/recipes", async (req, res) => {
+        const recipes = await recipeCollection.find({}).toArray();
+        res.status(200).json({ success: true, data: recipes });
+
+    });
+
+
+
+    app.delete("/admin/recipes/:id", async (req, res) => {
+
+        const { id } = req.params;
+        const result = await recipeCollection.deleteOne({ _id: new ObjectId(id) });
+        if (result.deletedCount > 0) {
+          res.status(200).json({ success: true, message: "Recipe deleted successfully!" });
+        }
+
+
+    });
+
+
+
+    app.patch("/admin/recipes/:id/toggle-featured", async (req, res) => {
+        const { id } = req.params;
+        const { isFeatured } = req.body;
+
+        const result = await recipeCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { isFeatured: isFeatured } }
+        );
+
+        if (result.modifiedCount > 0) {
+          res.status(200).json({ 
+            success: true, 
+            message: `Recipe ${isFeatured ? 'added to featured' : 'removed from featured'}!` 
+          });
+        }
+    });
+
+
+
+
+  app.get("/admin/reports", async (req, res) => {
+    const reports = await reportCollection.find({}).toArray();
+    res.status(200).json({ success: true, data: reports });
+  });
+
+
+    app.delete("/admin/reports/remove-recipe/:recipeId/:reportId", async (req, res) => {
+
+    const { recipeId, reportId } = req.params;
+    
+    const recipeResult = await recipeCollection.deleteOne({ _id: new ObjectId(recipeId) });
+    const reportResult = await reportCollection.deleteOne({ _id: new ObjectId(reportId) });
+
+    res.status(200).json({ success: true, recipeResult, reportResult });
+
+    });
+
+  app.delete("/admin/reports/dismiss/:reportId", async (req, res) => {
+
+    const { reportId } = req.params;
+    const result = await reportCollection.deleteOne({ _id: new ObjectId(reportId) });
+
+    if (result.deletedCount > 0) {
+      res.status(200).json({ success: true, result });
+    }
+
+
+});
+
+
 
     await client.db("admin").command({ ping: 1 });
     console.log(
