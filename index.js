@@ -360,7 +360,18 @@ async function run() {
 });
 
 
+  app.delete("/favorites/remove", async (req, res) => {
+    const { userId, recipeId } = req.body || req.query;
     
+    const result = await db.collection("favorites").deleteOne({
+      userId: userId,
+      recipeId: recipeId
+    });
+
+    if (result.deletedCount > 0) {
+      return res.status(200).json({ success: true, message: "Removed from favorites successfully" });
+    }
+  });
     
 
   app.post("/user/reports", async (req, res) => {
@@ -595,6 +606,12 @@ async function run() {
     res.status(200).json({ success: true, data: allTransactions });
 
   });
+
+    app.get('/api/recipes/featured', async (req, res) => {
+  const data = await db.collection("recipes").find({ isFeatured: true }).toArray();
+  
+  res.send(data);
+});
 
 
     await client.db("admin").command({ ping: 1 });
