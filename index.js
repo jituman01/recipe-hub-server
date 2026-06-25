@@ -550,6 +550,12 @@ async function run() {
 
 });
 
+    app.get('/api/recipes/popular', async (req, res) => {
+  const data = await db.collection("recipes").find({}).sort({ likesCount: -1 }).limit(6).toArray();
+  
+  res.send(data);
+});
+
 
   app.get("/admin/transactions", async (req, res) => {
 
