@@ -206,6 +206,7 @@ async function run() {
 
 
     app.post('/user/recipes', verifyToken, userVerify, async (req, res) => {
+
     const data = req.body;
     const authUserId = req.user.id;
 
@@ -228,7 +229,35 @@ async function run() {
     });
   
     res.send(result);
-  });
+    });
+    
+    app.get('/recipes', async (req, res) => {
+    const { page = 1, limit = 9, search, category } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+    
+    const query = {};
+    
+    if (search && search !== "undefined") {
+      query.$or = [
+        { recipeName: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } }
+      ];
+    }
+    if (category && category !== "undefined") {
+      query.category = category;
+    }
+
+    const result = await recipeCollection.find(query).skip(skip).limit(Number(limit)).toArray();
+
+    const totalData = await recipeCollection.countDocuments(query);
+    const totalPage = Math.ceil(totalData / Number(limit));
+    // console.log(totalData,totalPage);
+    
+    
+    res.send({data: result, page: Number(page),totalPage,totalData
+    });
+
+});
 
 
 
