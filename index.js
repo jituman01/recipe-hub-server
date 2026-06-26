@@ -29,6 +29,8 @@ const client = new MongoClient(uri, {
   },
 });
 
+
+
 const JWKS = createRemoteJWKSet(new URL(`${process.env.CLIENT_URL}/api/auth/jwks`));
 
 const verifyToken = async (req, res, next) => {
@@ -262,20 +264,25 @@ async function run() {
     
 
     app.get("/recipes", async (req, res) => {
-      const { search } = req.query;
-      // console.log(search);
-      
-      const query = {};
-      if (search && search != "undefined") {
-        query.$or = [
-          { recipeName: { $regex: search, $options: 'i' } },
-          { category: { $regex: search, $options: 'i' } }
-        ]
-      };
+  const { search, category } = req.query;
+  const query = {};
 
-      const result = await recipeCollection.find(query).toArray();
-      res.send(result);
-    });
+  // Search logic
+  if (search && search !== "undefined") {
+    query.$or = [
+      { recipeName: { $regex: search, $options: 'i' } },
+      { category: { $regex: search, $options: 'i' } }
+    ];
+  }
+
+  // Category filter logic
+  if (category && category !== "undefined") {
+    query.category = category;
+  }
+
+  const result = await recipeCollection.find(query).toArray();
+  res.send(result);
+  });
 
 
     app.get('/recipe/:id', async (req, res) => {
