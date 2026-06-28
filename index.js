@@ -90,6 +90,7 @@ client.connect(() => {
     const paymentCollection = db.collection('payment');
     const favoriteCollection = db.collection("favorites");
     const reportCollection = db.collection("reports");
+    const likesCollection = db.collection("likes");
 
 
     
@@ -415,6 +416,21 @@ client.connect(() => {
     }
   });
     
+
+app.get('/user/check-like', async (req, res) => {
+    const { userId, recipeId } = req.query;
+    const isLiked = await likesCollection.findOne({ userId, recipeId });
+    res.json({ isLiked: !!isLiked });
+});
+
+app.get('/user/check-favorite', async (req, res) => {
+    const { userId, recipeId } = req.query;
+    const isFavorited = await favoriteCollection.findOne({ userId, recipeId });
+    res.json({ isFavorited: !!isFavorited });
+});
+
+
+
 
   app.post("/user/reports", async (req, res) => {
 
